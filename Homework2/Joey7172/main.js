@@ -100,69 +100,79 @@ function drawScatterPlot(data) {
     .text("Attack vs Defense");
 }
 
-function drawParallelCoordinates(data) {
-  const dimensions = ["HP", "Attack", "Defense", "Speed"];
-
-  const y = {};
-  for (let dim of dimensions) {
-    y[dim] = d3.scaleLinear()
-      .domain([d3.min(data, d => d[dim]), d3.max(data, d => d[dim])])
-      .range([height - margin.top, 0]);
-  }
-
-  const x = d3.scalePoint()
-    .domain(dimensions)
-    .range([0, width]);
-
-  const line = d3.line()
-    .defined(([, value]) => value != null)
-    .x(([dim]) => x(dim))
-    .y(([dim, value]) => y[dim](value));
-
+function drawChordDiagram(data) {
+  // Prepare dimensions
   const svg = d3.select("#chart-parallel")
+    .html("") // clear any previous chart
     .append("svg")
     .attr("width", width + margin.left + margin.right)
-    .attr("height", height + 20)
+    .attr("height", width + margin.top + margin.bottom)
     .append("g")
-    .attr("transform", `translate(${margin.left},${margin.top})`);
+    .attr("transform", `translate(${(width + margin.left) / 2}, ${(width + margin.top) / 2})`);
 
-  svg.selectAll("path")
-    .data(data)
-    .enter().append("path")
-    .attr("d", d => line(dimensions.map(dim => [dim, d[dim]])))
-    .style("fill", "none")
-    .style("stroke", "#4682b4")
-    .style("opacity", 0.4);
+  // Get unique types
+  const types = Array.from(new Set(data.flatMap(d => [d.Type1, d.Type2]))).filter(Boolean);
+  const index = new Map(types.map((t, i) => [t, i]));
+  const matrix = Array.from({ length: types.length }, () => Array(types.length).fill(0));
 
-  const types = [...new Set(data.map(d => d.Type1))];
-  const color = d3.scaleOrdinal()
-    .domain(types)
-    .range(d3.schemeCategory10);
-
-  svg.selectAll("circle")
-    .data(data)
-    .enter()
-    .append("circle")
-    .attr("fill", d => color(d.Type1));   
-
-
-  dimensions.forEach(dim => {
-    svg.append("g")
-      .attr("transform", `translate(${x(dim)},0)`)
-      .call(d3.axisLeft(y[dim]));
-
-    svg.append("text")
-      .attr("x", x(dim))
-      .attr("y", -10)
-      .style("text-anchor", "middle")
-      .style("font-size", "12px")
-      .text(dim);
+  // Build matrix: matrix[i][j] = count of Type1 i and Type2 j
+  data.forEach(d => {
+    if (d.Type1 && d.Type2) {
+      const i = index.get(d.Type1);
+      const j = index.get(d.Type2);
+      matrix[i][j]++;
+    }
   });
 
-  svg.append("text")
-    .attr("x", width / 2)
-    .attr("y", -30)
-    .attr("text-anchor", "middle")
-    .style("font-size", "16px")
-    .text("Parallel Coordinates of Stats");
+  const res = d3.chord().padAngle(0.05).sortSubgroups(d3.descending)(matrix);
+  const arc = d3.arc().innerRadius(width / 2 - 100).outerRadius(width / 2 - 70);
+  const ribbon = d3.ribbon().radius(width / 2 - 100);
+
+  const color = d3.scaleOrdinal(d3.schemeCategory10).domain(types);
+
+  // Draw outer arcs
+  svg.append("g")
+    .selectAll("path")
+    .data(res.groups)
+    .join("path")
+    .attr("fill", d => color(types[d.index]))
+    .attr("d", arc)
+    .append("title")
+    .text(d => `${types[d.index]}: ${d3.sum(matrix[d.index])} connections`);
+
+  // Draw ribbons
+  svg.append("g")
+    .selectAll("path")
+    .data(res)
+    .join("path")
+    .attr("d", ribbon)
+    .attr("fill", d => color(types[d.source.index]))
+    .attr("stroke", "#ccc")
+    .append("title")
+    .text(d => `${types[d.source.index]} → ${types[d.target.index]}: ${d.source.value}`);
+
+  // Add labels
+  svg.append("g")
+    .selectAll("text")
+    .data(res.groups)
+    .join("text")
+    .each(d => { d.angle = (d.startAngle + d.endAngle) / 2; })
+    .attr("dy", ".35em")
+    .attr("transform", d => `
+      rotate(${(d.angle * 180 / Math.PI - 90)})
+      translate(${width / 2 - 60})
+      ${d.angle > Math.PI ? "rotate(180)" : ""}
+    `)
+    .style("text-anchor", d => d.angle > Math.PI ? "end" : null)
+    .text(d => types[d.index]);
+
+    // Color by Type
+    svg.append("g")
+    .selectAll("path")
+    .data(res.groups)
+    .join("path")
+    .attr("fill", d => color(types[d.index])) // 🟡 Color by Type
+    .attr("d", arc)
+    .append("title")
+    .text(d => `${types[d.index]}: ${d3.sum(matrix[d.index])} connections`);
 }
