@@ -27,7 +27,7 @@ function drawBarChart(data) {
 
   const color = d3.scaleOrdinal()
     .domain(generations)
-    .range(d3.schemeSet2); // or try d3.schemeTableau10, d3.schemeCategory10
+    .range(d3.schemeSet2);
 
   svg.selectAll("rect")
     .data(dataByGeneration)
@@ -171,7 +171,7 @@ function drawChordDiagram(data) {
     .selectAll("path")
     .data(res.groups)
     .join("path")
-    .attr("fill", d => color(types[d.index])) // 🟡 Color by Type
+    .attr("fill", d => color(types[d.index]))
     .attr("d", arc)
     .append("title")
     .text(d => `${types[d.index]}: ${d3.sum(matrix[d.index])} connections`);
