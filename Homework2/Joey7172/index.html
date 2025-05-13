@@ -1,23 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Pokemon Dashboard</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://d3js.org/d3.v7.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokemon Visualizations</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="main.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chart {
+            margin: 100px;
+        }
+        .chart-title {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Pokémon Visualization Dashboard</h1>
-  <div id="chart-overview" class="chart">
-    <div><h2>Bar Chart</h2></div>
-  </div>
-  <div id="chart-scatter" class="chart">
-    <div><h2>Scatter Plot</h2></div>
-  </div>
-  <div id="chord-diagram" class="chart">
-       <div><h2>Chord Diagram</h2></div>
-  </div>
+    <div><h1>Pokemon Visualizations</h1></div>
+    
+    <!-- Bar Chart -->
+    <div id="bar-chart" class="chart">
+        <h2 class="chart-title">Distribution of Pokémon Types</h2>
+    </div>
 
-  <script src="main.js"></script>
+    <!-- Scatter Plot -->
+    <div id="scatter-plot" class="chart">
+        <h2 class="chart-title">Pokémon Attack and Defense</h2>
+    </div>
+
+    <!-- Parallel Coordinates Plot -->
+    <div id="parallel-coordinates" class="chart">
+        <h2 id="parallel-coordinates-title" class="chart-title">Pokémon Stats</h2>
+    </div>
+
 </body>
 </html>
