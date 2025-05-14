@@ -1,42 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokemon Visualizations</title>
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="main.js"></script>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .chart {
-            margin: 100px;
-        }
-        .chart-title {
-            font-size: 24px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pokemon Visualizations</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="main.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    h3 {
+      margin: 0;
+      padding: 10px;
+      text-align: center;
+    }
+    .container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .side-charts {
+      display: flex;
+      flex-direction: column;
+      width: 30%;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    .chart {
+      flex: 1;
+      margin: 10px 0;
+      box-sizing: border-box;
+    }
+    .main-chart {
+      flex: 1;
+      margin: 10px;
+      box-sizing: border-box;
+    }
+    .chart-title {
+      font-size: 12px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
-    <div><h1>Pokemon Visualizations</h1></div>
-    
-    <!-- Bar Chart -->
-    <div id="bar-chart" class="chart">
+  <div>
+    <h3>Pokémon Visualizations</h3>
+  </div>
+  <div class="container">
+    <!-- Side charts (Bar Chart and Scatter Plot) -->
+    <div class="side-charts">
+      <div id="bar-chart" class="chart">
         <h2 class="chart-title">Distribution of Pokémon Types</h2>
-    </div>
-
-    <!-- Scatter Plot -->
-    <div id="scatter-plot" class="chart">
+      </div>
+      <div id="scatter-plot" class="chart">
         <h2 class="chart-title">Pokémon Attack and Defense</h2>
+      </div>
     </div>
-
-    <!-- Parallel Coordinates Plot -->
-    <div id="parallel-coordinates" class="chart">
-        <h2 id="parallel-coordinates-title" class="chart-title">Pokémon Stats</h2>
+    <!-- Main parallel coordinates plot -->
+    <div id="parallel-coordinates-section" class="main-chart">
+      <h2 id="parallel-coordinates-title" class="chart-title">Pokémon Stats</h2>
+      <div id="parallel-coordinates" style="width: 100%; height: calc(100% - 40px);"></div>
     </div>
-
+  </div>
 </body>
 </html>
