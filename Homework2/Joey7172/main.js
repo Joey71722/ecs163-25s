@@ -1,10 +1,37 @@
-// main.js
+// Load the Pokemon dataset
 
 // Load the Pokemon dataset
 d3.csv("data/pokemon_alopez247.csv").then(function(data) {
     console.log(data);  // Check if the data is loaded correctly
 
-    // ----- Bar Chart: Distribution of Pokémon by Type_1 -----
+    // Shared color scale
+    const colorMap = {
+        "Grass": "lightgreen",
+        "Fire": "red",
+        "Water": "blue",
+        "Bug": "darkgreen",
+        "Normal": "magenta",
+        "Psychic": "purple",
+        "Rock": "brown",
+        "Dark": "darkgray",
+        "Steel": "gray",
+        "Fairy": "pink",
+        "Dragon": "orange",
+        "Ghost": "violet",
+        "Ice": "cyan",
+        "Poison": "darkviolet",
+        "Electric": "yellow",
+        "Ground": "tan",
+        "Flying": "turquoise",
+        "Fighting": "darkred"
+    };
+
+    const getColor = (type) => colorMap[type] || "gray";
+
+    // Store selected type globally
+    let selectedType = null;
+
+    // ----- Bar Chart -----
     const marginBar = { top: 40, right: 20, bottom: 60, left: 50 };
     const widthBar = 500 - marginBar.left - marginBar.right;
     const heightBar = 300 - marginBar.top - marginBar.bottom;
@@ -27,8 +54,7 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .nice()
         .range([heightBar, 0]);
 
-    // Create bars
-    svgBar.selectAll(".bar")
+    const bars = svgBar.selectAll(".bar")
         .data(Array.from(type1Count.entries()))
         .enter().append("rect")
         .attr("class", "bar")
@@ -36,39 +62,30 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .attr("y", d => yBar(d[1]))
         .attr("width", xBar.bandwidth())
         .attr("height", d => heightBar - yBar(d[1]))
-        .attr("fill", d => {
-            if (d[0] === "Grass") return "lightgreen";
-            else if (d[0] === "Fire") return "red";
-            else if (d[0] === "Water") return "blue";
-            else if (d[0] === "Bug") return "darkgreen";
-            else if (d[0] === "Normal") return "magenta";
-            else if (d[0] === "Psychic") return "purple";
-            else if (d[0] === "Rock") return "brown";
-            else if (d[0] === "Dark") return "darkgray";
-            else if (d[0] === "Steel") return "gray";
-            else if (d[0] === "Fairy") return "pink";
-            else if (d[0] === "Dragon") return "orange";
-            else if (d[0] === "Ghost") return "violet";
-            else if (d[0] === "Ice") return "iceblue";
-            else if (d[0] === "Poison") return "darkviolet";
-            else if (d[0] === "Electric") return "yellow";
-            else if (d[0] === "Ground") return "tan";
-            else if (d[0] === "Flying") return "lightblue";
-            else if (d[0] === "Fighting") return "darkred";
+        .attr("fill", d => getColor(d[0]))
+        .style("cursor", "pointer")
+        .on("mouseover", (event, d) => highlightType(d[0]))
+        .on("mouseout", () => { if (!selectedType) resetHighlight(); })
+        .on("click", (event, d) => {
+            if (selectedType === d[0]) {
+                selectedType = null;
+                resetHighlight();
+                updateBarHighlight();
+            } else {
+                selectedType = d[0];
+                highlightType(d[0]);
+                updateBarHighlight();
+            }
         });
 
-    // Create Y-axis
-    svgBar.append("g")
-        .call(d3.axisLeft(yBar));
+    svgBar.append("g").call(d3.axisLeft(yBar));
 
-    // Create X-axis
     svgBar.append("g")
         .attr("transform", "translate(0," + heightBar + ")")
         .call(d3.axisBottom(xBar))
         .selectAll("text")
-        .style("font-size", "6px"); // make label font smaller
+        .style("font-size", "6px");
 
-    // Add X-axis title
     svgBar.append("text")
         .attr("x", widthBar / 2)
         .attr("y", heightBar + 40)
@@ -76,7 +93,6 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .style("font-size", "10px")
         .text("Type");
 
-    // Add Y-axis title
     svgBar.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", -40)
@@ -85,13 +101,12 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .style("font-size", "10px")
         .text("Number of Pokémon");
 
-    // Title for Bar Chart
     d3.select("#bar-chart-title")
         .style("text-anchor", "middle")
         .style("font-size", "12px")
         .text("Distribution of Pokémon Types");
 
-    // ----- Scatter Plot: Attack vs Defense -----
+    // ----- Scatter Plot -----
     const marginScatter = { top: 40, right: 150, bottom: 60, left: 50 };
     const widthScatter = 500 - marginScatter.left - marginScatter.right;
     const heightScatter = 300 - marginScatter.top - marginScatter.bottom;
@@ -110,35 +125,21 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .domain([0, d3.max(data, d => +d.Attack)])
         .range([heightScatter, 0]);
 
-    // Create scatter plot dots
-    const color = d3.scaleOrdinal()
-        .domain(Array.from(new Set(data.map(d => d.Type_1))));
-
-    svgScatter.selectAll(".dot")
+    const scatterDots = svgScatter.selectAll(".dot")
         .data(data)
         .enter().append("circle")
         .attr("class", "dot")
         .attr("cx", d => xScatter(+d.Defense))
         .attr("cy", d => yScatter(+d.Attack))
         .attr("r", 2)
-        .attr("fill", d => {
-            if (d.Type_1 === "Grass") return "lightgreen";
-            else if (d.Type_1 === "Fire") return "red";
-            else if (d.Type_1 === "Water") return "blue";
-            else if (d.Type_1 === "Bug") return "darkgreen";
-            else if (d.Type_1 === "Normal") return "magenta";
-            else if (d.Type_1 === "Psychic") return "purple";
-            else return "gray";
-        });
+        .attr("fill", d => getColor(d.Type_1));
 
-    // Add legend
     d3.select("#scatter-plot-legend-title")
         .style("text-anchor", "middle")
         .style("font-size", "10px")
         .text("Legend: Pokémon Types");
 
-    const otherTypes = ["Dark", "Steel", "Fairy", "Dragon", "Ghost", "Ice", "Poison", "Electric", "Ground", "Flying", "Fighting", "Rock"];
-    const legendData = Array.from(new Set(data.map(d => otherTypes.includes(d.Type_1) ? "Other" : d.Type_1)));
+    const legendData = Array.from(new Set(data.map(d => colorMap[d.Type_1] ? d.Type_1 : "Other")));
 
     const legendScatter = svgScatter.selectAll(".legend")
         .data(legendData)
@@ -150,15 +151,7 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .attr("x", widthScatter + 50)
         .attr("width", 12)
         .attr("height", 12)
-        .style("fill", d => {
-            if (d === "Grass") return "lightgreen";
-            else if (d === "Fire") return "red";
-            else if (d === "Water") return "blue";
-            else if (d === "Bug") return "darkgreen";
-            else if (d === "Normal") return "magenta";
-            else if (d === "Psychic") return "purple";
-            else return "gray";
-        });
+        .style("fill", d => getColor(d));
 
     legendScatter.append("text")
         .attr("x", widthScatter + 70)
@@ -168,16 +161,11 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .style("font-size", "8px")
         .text(d => d);
 
-    // Create Y-axis
-    svgScatter.append("g")
-        .call(d3.axisLeft(yScatter));
-
-    // Create X-axis
+    svgScatter.append("g").call(d3.axisLeft(yScatter));
     svgScatter.append("g")
         .attr("transform", "translate(0," + heightScatter + ")")
         .call(d3.axisBottom(xScatter));
 
-    // Add X-axis title
     svgScatter.append("text")
         .attr("x", widthScatter / 2)
         .attr("y", heightScatter + 40)
@@ -185,7 +173,6 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .style("font-size", "10px")
         .text("Defense");
 
-    // Add Y-axis title
     svgScatter.append("text")
         .attr("transform", "rotate(-90)")
         .attr("y", -40)
@@ -194,13 +181,12 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .style("font-size", "10px")
         .text("Attack");
 
-    // Title for Scatter Plot
     d3.select("#scatter-plot-title")
         .style("text-anchor", "middle")
         .style("font-size", "12px")
         .text("Attack vs Defense of Pokémon");
 
-    // ----- Parallel Coordinates: Pokémon Stats -----
+    // ----- Parallel Coordinates -----
     const marginParallel = { top: 40, right: 150, bottom: 20, left: 100 };
     const widthParallel = 1000 - marginParallel.left - marginParallel.right;
     const heightParallel = 400 - marginParallel.top - marginParallel.bottom;
@@ -213,7 +199,6 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
 
     const dimensions = ["HP", "Attack", "Defense", "Speed"];
 
-    // Y-axis scales
     const yScales = {};
     dimensions.forEach(dim => {
         yScales[dim] = d3.scaleLinear()
@@ -221,31 +206,21 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
             .range([heightParallel, 0]);
     });
 
-    // X-axis scales
     const xParallel = d3.scalePoint()
         .domain(dimensions)
         .range([0, widthParallel]);
 
-    // Draw the lines
     function path(d) {
         return d3.line()(dimensions.map(p => [xParallel(p), yScales[p](+d[p])]));
     }
 
-    // Draw the axes
-    svgParallelCoordinates.selectAll("path")
+    const parallelPaths = svgParallelCoordinates.selectAll(".line")
         .data(data)
         .enter().append("path")
+        .attr("class", "line")
         .attr("d", path)
         .attr("fill", "none")
-        .attr("stroke", d => {
-            if (d.Type_1 === "Grass") return "lightgreen";
-            else if (d.Type_1 === "Fire") return "red";
-            else if (d.Type_1 === "Water") return "blue";
-            else if (d.Type_1 === "Bug") return "darkgreen";
-            else if (d.Type_1 === "Normal") return "magenta";
-            else if (d.Type_1 === "Psychic") return "purple";
-            else return "gray";
-        })
+        .attr("stroke", d => getColor(d.Type_1))
         .attr("stroke-opacity", 0.3)
         .attr("stroke-width", 1);
 
@@ -262,7 +237,6 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
             .style("font-weight", "bold");
     });
 
-    // Legend
     d3.select("#parallel-coordinates-title")
         .style("text-anchor", "middle")
         .style("font-size", "12px")
@@ -278,15 +252,7 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .attr("x", widthParallel + 50)
         .attr("width", 12)
         .attr("height", 12)
-        .style("fill", d => {
-            if (d === "Grass") return "lightgreen";
-            else if (d === "Fire") return "red";
-            else if (d === "Water") return "blue";
-            else if (d === "Bug") return "darkgreen";
-            else if (d === "Normal") return "magenta";
-            else if (d === "Psychic") return "purple";
-            else return "gray";
-        });
+        .style("fill", d => getColor(d));
 
     legendParallelCoordinates.append("text")
         .attr("x", widthParallel + 70)
@@ -295,4 +261,44 @@ d3.csv("data/pokemon_alopez247.csv").then(function(data) {
         .style("text-anchor", "start")
         .style("font-size", "8px")
         .text(d => d);
+
+    // Interaction
+    function highlightType(type) {
+    scatterDots.transition()
+        .duration(500)
+        .attr("opacity", d => d.Type_1 === type ? 1 : 0.1);
+
+    parallelPaths.transition()
+        .duration(500)
+        .attr("stroke-opacity", d => d.Type_1 === type ? 1 : 0.05);
+}
+
+    function resetHighlight() {
+    scatterDots.transition()
+        .duration(500)
+        .attr("opacity", 1);
+
+    parallelPaths.transition()
+        .duration(500)
+        .attr("stroke-opacity", 0.3);
+}
+
+    function updateBarHighlight() {
+        bars.attr("fill", d => {
+            if (selectedType && selectedType !== d[0]) return "#ccc";
+            return getColor(d[0]);
+        });
+
+        // Add a transparent rect behind the parallel coordinates plot
+svgParallelCoordinates.append("rect")
+    .attr("width", widthParallel)
+    .attr("height", heightParallel)
+    .attr("fill", "transparent")
+    .lower()
+    .on("click", () => {
+        selectedType = null;
+        resetHighlight();
+    });
+    }
 });
+
